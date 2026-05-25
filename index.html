@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlayZone — Jeux entre amis</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #F5C842;
+  --gold-dark: #C89F1A;
+  --hot: #FF3D6B;
+  --hot-dark: #C4002D;
+  --bg: #0D0D14;
+  --bg2: #14141F;
+  --bg3: #1C1C2E;
+  --card: #1E1E30;
+  --border: rgba(255,255,255,0.08);
+  --text: #EEEEF5;
+  --muted: #888899;
+  --purple: #8A70FF;
+  --teal: #30D5A8;
+  --pink: #FF6BCA;
+  --orange: #FF8C42;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+h1,h2,h3,h4 { font-family:'Syne',sans-serif; }
+
+/* ── NAV ── */
+nav { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; background:rgba(13,13,20,0.95); backdrop-filter:blur(12px); }
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; background:linear-gradient(135deg,var(--gold),var(--hot)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-links { display:flex; gap:0.5rem; }
+.nav-btn { background:none; border:1px solid var(--border); color:var(--text); padding:0.45rem 1rem; border-radius:999px; cursor:pointer; font-size:0.85rem; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+.nav-btn:hover { border-color:var(--gold); color:var(--gold); }
+.nav-btn.hot { border-color:var(--hot); color:var(--hot); }
+.nav-btn.primary { background:var(--gold); color:#000; border-color:var(--gold); font-weight:600; }
+.nav-btn.primary:hover { background:var(--gold-dark); }
+
+/* ── PAGES ── */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── HERO ── */
+.hero { padding:4rem 2rem 3rem; text-align:center; max-width:800px; margin:0 auto; }
+.hero h1 { font-size:clamp(2.5rem,6vw,4rem); font-weight:800; line-height:1.1; margin-bottom:1rem; }
+.hero h1 span { background:linear-gradient(135deg,var(--gold),var(--orange)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { color:var(--muted); font-size:1.1rem; margin-bottom:2rem; line-height:1.6; }
+.hero-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+.btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.75rem 1.75rem; border-radius:999px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer; border:none; transition:all 0.2s; text-decoration:none; }
+.btn-gold { background:var(--gold); color:#000; }
+.btn-gold:hover { background:var(--gold-dark); transform:translateY(-2px); }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+.btn-outline:hover { border-color:var(--text); }
+.btn-hot { background:var(--hot); color:#fff; }
+.btn-hot:hover { background:var(--hot-dark); transform:translateY(-2px); }
+.btn-purple { background:var(--purple); color:#fff; }
+.btn-teal { background:var(--teal); color:#000; }
+
+/* ── GAME GRID ── */
+.section { padding:2rem; max-width:1100px; margin:0 auto; }
+.section-title { font-size:1.4rem; font-weight:700; margin-bottom:1.5rem; }
+.games-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1rem; }
+.game-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; cursor:pointer; transition:all 0.25s; position:relative; overflow:hidden; }
+.game-card::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.25s; }
+.game-card:hover { transform:translateY(-4px); border-color:rgba(255,255,255,0.2); }
+.game-card:hover::before { opacity:1; }
+.game-card.purple::before { background:linear-gradient(135deg,rgba(138,112,255,0.1),transparent); }
+.game-card.gold::before { background:linear-gradient(135deg,rgba(245,200,66,0.1),transparent); }
+.game-card.pink::before { background:linear-gradient(135deg,rgba(255,107,202,0.1),transparent); }
+.game-card.teal::before { background:linear-gradient(135deg,rgba(48,213,168,0.1),transparent); }
+.game-card.hot::before { background:linear-gradient(135deg,rgba(255,61,107,0.1),transparent); }
+.game-card.orange::before { background:linear-gradient(135deg,rgba(255,140,66,0.1),transparent); }
+.game-icon { font-size:2.5rem; margin-bottom:0.75rem; display:block; }
+.game-card h3 { font-size:1rem; font-weight:700; margin-bottom:0.4rem; }
+.game-card p { font-size:0.82rem; color:var(--muted); line-height:1.5; }
+.badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:0.7rem; font-weight:600; margin-top:0.75rem; }
+.badge-hot { background:rgba(255,61,107,0.2); color:var(--hot); border:1px solid rgba(255,61,107,0.4); }
+.badge-new { background:rgba(48,213,168,0.2); color:var(--teal); border:1px solid rgba(48,213,168,0.4); }
+.badge-multi { background:rgba(138,112,255,0.2); color:var(--purple); border:1px solid rgba(138,112,255,0.4); }
+
+/* ── ROOM LOBBY ── */
+.lobby { max-width:600px; margin:0 auto; padding:2rem; text-align:center; }
+.room-code-box { background:var(--card); border:2px dashed var(--gold); border-radius:16px; padding:2rem; margin:1.5rem 0; }
+.room-code { font-family:'Syne',sans-serif; font-size:3rem; font-weight:800; letter-spacing:0.3em; color:var(--gold); }
+.players-list { display:flex; flex-wrap:wrap; gap:0.75rem; justify-content:center; margin:1.5rem 0; }
+.player-avatar { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; border:2px solid var(--border); }
+.player-avatar.host { border-color:var(--gold); }
+.player-slot { width:52px; height:52px; border-radius:50%; border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:1.2rem; }
+.input-field { background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:0.75rem 1.25rem; border-radius:12px; font-size:1rem; font-family:'DM Sans',sans-serif; width:100%; outline:none; transition:border-color 0.2s; }
+.input-field:focus { border-color:var(--gold); }
+.input-row { display:flex; gap:0.75rem; margin:1rem 0; }
+
+/* ── GAME MODES ── */
+.game-area { max-width:700px; margin:0 auto; padding:2rem; }
+.question-card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:2.5rem; text-align:center; margin:1.5rem 0; position:relative; overflow:hidden; }
+.question-card h2 { font-size:1.5rem; line-height:1.4; margin-bottom:1.5rem; }
+.answers-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+.answer-btn { background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:1rem; border-radius:12px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.95rem; transition:all 0.2s; }
+.answer-btn:hover { border-color:var(--purple); background:rgba(138,112,255,0.1); color:var(--purple); }
+.answer-btn.correct { border-color:var(--teal); background:rgba(48,213,168,0.15); color:var(--teal); }
+.answer-btn.wrong { border-color:var(--hot); background:rgba(255,61,107,0.15); color:var(--hot); }
+
+/* ── TIMER ── */
+.timer-ring { position:relative; width:90px; height:90px; margin:0 auto 1.5rem; }
+.timer-ring svg { transform:rotate(-90deg); }
+.timer-ring circle { fill:none; stroke-width:6; stroke-linecap:round; }
+.timer-bg { stroke:var(--bg3); }
+.timer-fg { stroke:var(--gold); stroke-dasharray:251; stroke-dashoffset:0; transition:stroke-dashoffset 1s linear, stroke 0.5s; }
+.timer-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:800; font-size:1.3rem; color:var(--gold); }
+
+/* ── ROULETTE ── */
+.roulette-container { position:relative; width:280px; height:280px; margin:1.5rem auto; }
+.roulette-wheel { width:100%; height:100%; border-radius:50%; position:relative; transition:transform 3s cubic-bezier(0.17,0.67,0.12,1); border:4px solid var(--gold); box-shadow:0 0 30px rgba(245,200,66,0.3); overflow:hidden; }
+.roulette-pointer { position:absolute; top:-18px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:12px solid transparent; border-right:12px solid transparent; border-bottom:24px solid var(--gold); z-index:10; filter:drop-shadow(0 0 8px var(--gold)); }
+.roulette-result { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:700; text-align:center; min-height:2rem; color:var(--gold); }
+
+/* ── VOTE / QUI EST LE PLUS ── */
+.vote-card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:2rem; text-align:center; }
+.vote-options { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin:1.5rem 0; }
+.vote-player { background:var(--bg3); border:2px solid var(--border); border-radius:12px; padding:1rem 1.5rem; cursor:pointer; transition:all 0.2s; min-width:120px; }
+.vote-player:hover { border-color:var(--purple); }
+.vote-player.voted { border-color:var(--gold); background:rgba(245,200,66,0.1); }
+.vote-bar { height:8px; border-radius:4px; background:var(--bg3); margin:0.5rem 0; overflow:hidden; }
+.vote-fill { height:100%; background:linear-gradient(90deg,var(--purple),var(--pink)); border-radius:4px; transition:width 0.5s; }
+
+/* ── HOT SECTION ── */
+.hot-section { background:linear-gradient(135deg,rgba(255,61,107,0.08),rgba(255,140,66,0.05)); border:1px solid rgba(255,61,107,0.2); border-radius:20px; padding:2rem; margin:1.5rem 0; text-align:center; }
+.hot-section h2 { color:var(--hot); }
+.locked-overlay { position:relative; }
+.lock-icon { font-size:3rem; margin:1rem 0; }
+.sub-card { background:var(--card); border:1px solid rgba(255,61,107,0.3); border-radius:16px; padding:1.5rem; max-width:360px; margin:1rem auto; }
+.price-tag { font-family:'Syne',sans-serif; font-size:2.5rem; font-weight:800; color:var(--hot); }
+.price-tag span { font-size:1rem; color:var(--muted); font-weight:400; }
+
+/* ── COMPAT ── */
+.compat-meter { background:var(--bg3); border-radius:999px; height:20px; overflow:hidden; margin:1rem 0; }
+.compat-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--hot),var(--purple),var(--teal)); transition:width 1.5s ease; }
+.compat-result { font-family:'Syne',sans-serif; font-size:3rem; font-weight:800; text-align:center; }
+
+/* ── PERSONALITY QUIZ ── */
+.quiz-progress { display:flex; gap:4px; margin-bottom:1.5rem; }
+.quiz-dot { flex:1; height:4px; border-radius:2px; background:var(--bg3); transition:background 0.3s; }
+.quiz-dot.done { background:var(--purple); }
+.quiz-dot.current { background:var(--gold); }
+
+/* ── SOIREE MODE ── */
+.challenge-card { background:linear-gradient(135deg,var(--bg3),var(--card)); border:1px solid var(--border); border-radius:20px; padding:2.5rem; text-align:center; }
+.challenge-emoji { font-size:4rem; margin-bottom:1rem; display:block; }
+.challenge-text { font-size:1.3rem; font-weight:600; margin-bottom:1rem; }
+.turn-indicator { display:flex; align-items:center; gap:0.5rem; background:var(--bg3); border-radius:999px; padding:0.5rem 1rem; display:inline-flex; margin-bottom:1.5rem; }
+.dot-live { width:8px; height:8px; border-radius:50%; background:var(--teal); animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+/* ── TABS ── */
+.tabs { display:flex; gap:0.5rem; padding:0 2rem 0; overflow-x:auto; border-bottom:1px solid var(--border); }
+.tab { padding:0.75rem 1.25rem; border:none; background:none; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.9rem; border-bottom:2px solid transparent; transition:all 0.2s; white-space:nowrap; }
+.tab.active { color:var(--text); border-bottom-color:var(--gold); }
+.tab:hover { color:var(--text); }
+
+/* ── MODAL ── */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; padding:1rem; }
+.modal-bg.show { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2rem; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; }
+.modal h2 { font-size:1.4rem; margin-bottom:1.5rem; }
+.close-btn { position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--muted); font-size:1.5rem; cursor:pointer; }
+
+/* ── BACK BTN ── */
+.back-btn { background:none; border:1px solid var(--border); color:var(--muted); padding:0.5rem 1rem; border-radius:999px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.85rem; margin-bottom:1.5rem; transition:all 0.2s; display:inline-flex; align-items:center; gap:0.4rem; }
+.back-btn:hover { color:var(--text); border-color:var(--text); }
+
+/* ── SCOREBOARD ── */
+.score-row { display:flex; align-items:center; gap:1rem; background:var(--card); border-radius:12px; padding:0.75rem 1rem; margin-bottom:0.5rem; }
+.score-rank { font-family:'Syne',sans-serif; font-weight:700; width:1.5rem; color:var(--muted); }
+.score-rank.first { color:var(--gold); }
+.score-name { flex:1; font-weight:500; }
+.score-pts { font-family:'Syne',sans-serif; font-weight:700; color:var(--purple); }
+
+/* ── NOTIFICATION ── */
+.notif { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:0.75rem 1.5rem; font-size:0.9rem; z-index:300; display:none; white-space:nowrap; }
+.notif.show { display:block; animation:slideUp 0.3s ease; }
+@keyframes slideUp { from{transform:translateX(-50%) translateY(20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+
+/* ── UTILS ── */
+.flex-center { display:flex; align-items:center; justify-content:center; }
+.gap-1 { gap:0.5rem; }
+.mt-1 { margin-top:1rem; }
+.mt-2 { margin-top:1.5rem; }
+.text-muted { color:var(--muted); font-size:0.85rem; }
+.text-center { text-align:center; }
+.divider { border:none; border-top:1px solid var(--border); margin:1.5rem 0; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">🎮 PlayZone</div>
+  <div class="nav-links">
+    <button class="nav-btn" onclick="showPage('home')">Accueil</button>
+    <button class="nav-btn hot" onclick="openHotModal()">🔥 HOT</button>
+    <button class="nav-btn primary" onclick="showPage('lobby')">Jouer</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════ HOME PAGE ══════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <h1>Jouez ensemble,<br><span>où que vous soyez</span></h1>
+    <p>Jeux de soirée, quiz, défis et plus encore — jouez en temps réel avec vos amis à distance via un simple lien.</p>
+    <div class="hero-btns">
+      <button class="btn btn-gold" onclick="showPage('lobby')">🚀 Créer une partie</button>
+      <button class="btn btn-outline" onclick="showJoinModal()">🔗 Rejoindre</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🎮 Choisissez un jeu</div>
+    <div class="games-grid">
+
+      <div class="game-card purple" onclick="startGame('questions')">
+        <span class="game-icon">❓</span>
+        <h3>Questions Gênantes</h3>
+        <p>Le site génère des questions piquantes automatiquement. Suivant, Plus chaud 🔥, Plus drôle 😂</p>
+        <span class="badge badge-multi">Multijoueur</span>
+      </div>
+
+      <div class="game-card gold" onclick="startGame('qui')">
+        <span class="game-icon">🏆</span>
+        <h3>Qui est le plus…</h3>
+        <p>Qui est le plus jaloux ? Le plus drôle ? Votez entre amis et découvrez les résultats explosifs.</p>
+        <span class="badge badge-new">Viral</span>
+      </div>
+
+      <div class="game-card pink" onclick="startGame('personnalite')">
+        <span class="game-icon">🧠</span>
+        <h3>Quiz de Personnalité</h3>
+        <p>Quel type d'ami es-tu ? Quel couple feriez-vous ? Partagez vos résultats !</p>
+        <span class="badge badge-multi">Quiz</span>
+      </div>
+
+      <div class="game-card teal" onclick="startGame('compat')">
+        <span class="game-icon">❤️</span>
+        <h3>Match & Compatibilité</h3>
+        <p>Deux personnes répondent aux mêmes questions. Le site calcule votre compatibilité.</p>
+        <span class="badge badge-new">Nouveau</span>
+      </div>
+
+      <div class="game-card orange" onclick="startGame('defis')">
+        <span class="game-icon">⚡</span>
+        <h3>Défis Rapides</h3>
+        <p>Danse 10 secondes, imitation, emoji à ton crush... Des mini-défis chronométrés !</p>
+        <span class="badge badge-multi">Chrono</span>
+      </div>
+
+      <div class="game-card gold" onclick="startGame('roulette')">
+        <span class="game-icon">🎰</span>
+        <h3>Roulette des Vérités</h3>
+        <p>La roulette animée choisit le joueur. Vérité ou défi ? Impossible d'y échapper !</p>
+        <span class="badge badge-multi">Soirée</span>
+      </div>
+
+      <div class="game-card hot" onclick="checkHotAccess('soiree')">
+        <span class="game-icon">🥂</span>
+        <h3>Mode Soirée</h3>
+        <p>Tours automatiques, pénalités, défis ambiance fête. Jouez en groupe à distance !</p>
+        <span class="badge badge-multi">Groupe</span>
+      </div>
+
+      <div class="game-card hot" onclick="checkHotAccess('hot')">
+        <span class="game-icon">🔥</span>
+        <h3>Zone HOT 🔞</h3>
+        <p>Questions et défis adultes. Abonnement requis. Partageable avec 1 seul partenaire.</p>
+        <span class="badge badge-hot">Abonnement</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ LOBBY PAGE ══════════════════════ -->
+<div id="page-lobby" class="page">
+  <div class="lobby">
+    <button class="back-btn" onclick="showPage('home')">← Retour</button>
+    <h2 style="font-size:1.6rem; margin-bottom:0.5rem;">🎮 Votre Salon</h2>
+    <p class="text-muted">Partagez le code ou le lien avec vos amis</p>
+
+    <div class="room-code-box">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">CODE DE SALLE</div>
+      <div class="room-code" id="room-code-display">XK49</div>
+      <div style="margin-top:1rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-outline" style="font-size:0.85rem;padding:0.5rem 1rem;" onclick="copyCode()">📋 Copier le code</button>
+        <button class="btn btn-outline" style="font-size:0.85rem;padding:0.5rem 1rem;" onclick="shareLink()">🔗 Partager le lien</button>
+      </div>
+    </div>
+
+    <div style="margin:1rem 0;">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;text-align:left;">JOUEURS CONNECTÉS (<span id="player-count">1</span>/8)</div>
+      <div class="players-list" id="players-list">
+        <div class="player-avatar host" style="background:rgba(245,200,66,0.2);color:var(--gold);">Toi</div>
+        <div class="player-slot" id="slot2">+</div>
+        <div class="player-slot" id="slot3">+</div>
+        <div class="player-slot" id="slot4">+</div>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;text-align:left;margin:1rem 0;">
+      <div style="font-weight:600;margin-bottom:1rem;">Choisir le jeu :</div>
+      <select class="input-field" id="lobby-game-select" style="margin-bottom:1rem;">
+        <option value="questions">❓ Questions Gênantes</option>
+        <option value="qui">🏆 Qui est le plus…</option>
+        <option value="personnalite">🧠 Quiz de Personnalité</option>
+        <option value="compat">❤️ Match & Compatibilité</option>
+        <option value="defis">⚡ Défis Rapides</option>
+        <option value="roulette">🎰 Roulette des Vérités</option>
+        <option value="soiree">🥂 Mode Soirée</option>
+      </select>
+      <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="launchFromLobby()">🚀 Lancer la partie</button>
+    </div>
+
+    <div style="text-align:left;margin-top:1.5rem;">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Ou rejoindre une salle :</div>
+      <div class="input-row">
+        <input class="input-field" id="join-code-input" placeholder="Entrez le code (ex: XK49)" maxlength="6" style="text-transform:uppercase;">
+        <button class="btn btn-purple" onclick="joinRoom()" style="white-space:nowrap;">Rejoindre</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ GAME PAGE ══════════════════════ -->
+<div id="page-game" class="page">
+  <div id="game-content"></div>
+</div>
+
+<!-- ══════════════════════ MODALS ══════════════════════ -->
+
+<!-- JOIN MODAL -->
+<div class="modal-bg" id="join-modal">
+  <div class="modal" style="position:relative;">
+    <button class="close-btn" onclick="closeModal('join-modal')">×</button>
+    <h2>🔗 Rejoindre une partie</h2>
+    <input class="input-field" id="join-code-modal" placeholder="Code de salle (ex: XK49)" style="text-transform:uppercase;margin-bottom:1rem;" maxlength="6">
+    <input class="input-field" id="join-name" placeholder="Votre pseudo" style="margin-bottom:1.5rem;">
+    <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="joinFromModal()">Rejoindre 🚀</button>
+  </div>
+</div>
+
+<!-- HOT SUBSCRIPTION MODAL -->
+<div class="modal-bg" id="hot-modal">
+  <div class="modal" style="position:relative;">
+    <button class="close-btn" onclick="closeModal('hot-modal')">×</button>
+    <div style="text-align:center;">
+      <div style="font-size:3rem;margin-bottom:0.75rem;">🔥</div>
+      <h2 style="color:var(--hot);">Zone HOT — Abonnement</h2>
+      <p class="text-muted" style="margin:0.75rem 0 1rem;">Débloquez les jeux adultes. Partagez avec 1 seul partenaire via un code exclusif.</p>
+
+      <!-- FORFAITS -->
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;">
+        <div class="sub-plan selected-plan" id="plan-month" onclick="selectPlan('month',2500)" style="flex:1;min-width:130px;background:var(--bg3);border:2px solid var(--hot);border-radius:14px;padding:1rem;cursor:pointer;">
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.25rem;">MENSUEL</div>
+          <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--hot);">2 500</div>
+          <div style="font-size:0.75rem;color:var(--muted);">FCFA/mois</div>
+        </div>
+        <div class="sub-plan" id="plan-3month" onclick="selectPlan('3month',6000)" style="flex:1;min-width:130px;background:var(--bg3);border:2px solid var(--border);border-radius:14px;padding:1rem;cursor:pointer;position:relative;">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;">ÉCONOMISEZ 20%</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.25rem;">3 MOIS</div>
+          <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--gold);">6 000</div>
+          <div style="font-size:0.75rem;color:var(--muted);">FCFA</div>
+        </div>
+      </div>
+
+      <!-- AVANTAGES -->
+      <div style="text-align:left;background:var(--bg3);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:0.88rem;line-height:2.2;color:var(--muted);">
+        <div>✅ Accès à tous les jeux adultes</div>
+        <div>✅ Code partenaire exclusif (1 seule personne)</div>
+        <div>✅ Nouveaux contenus chaque semaine</div>
+        <div>✅ Mode soirée privé</div>
+      </div>
+
+      <!-- CHAMPS PAIEMENT -->
+      <input class="input-field" id="pay-name" placeholder="Votre nom complet" style="margin-bottom:0.75rem;">
+      <input class="input-field" id="pay-phone" placeholder="Numéro Mobile Money (ex: 22997000000)" style="margin-bottom:0.75rem;" type="tel">
+      <select class="input-field" id="pay-operator" style="margin-bottom:1.25rem;">
+        <option value="MTN_MOMO_BEN">MTN Mobile Money (Bénin)</option>
+        <option value="MOOV_BEN">Moov Money (Bénin)</option>
+        <option value="MTN_MOMO_CI">MTN Mobile Money (Côte d'Ivoire)</option>
+        <option value="ORANGE_MONEY_CI">Orange Money (Côte d'Ivoire)</option>
+        <option value="WAVE_CI">Wave</option>
+      </select>
+
+      <!-- BOUTON PAYER -->
+      <button class="btn btn-hot" id="pay-btn" style="width:100%;justify-content:center;font-size:1rem;" onclick="initFedaPayPayment()">
+        💳 Payer maintenant — <span id="pay-amount-label">2 500 FCFA</span>
+      </button>
+
+      <!-- DEMO PAYMENT BLOCK injecté dynamiquement par JS -->
+
+      <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem;">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">Déjà abonné ? Entrez votre code partenaire reçu.</div>
+        <div style="display:flex;gap:0.75rem;">
+          <input class="input-field" id="partner-code-input" placeholder="Code partenaire (ex: HOT-XXXXXX)" style="flex:1;text-transform:uppercase;">
+          <button class="btn btn-outline" style="white-space:nowrap;font-size:0.85rem;" onclick="usePartnerCode()">Accéder</button>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;color:var(--muted);font-size:0.75rem;">
+        <span>🔒 Paiement sécurisé par</span>
+        <strong style="color:var(--text);">FedaPay</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBSCRIPTION SUCCESS MODAL -->
+<div class="modal-bg" id="sub-success-modal">
+  <div class="modal" style="position:relative;text-align:center;">
+    <button class="close-btn" onclick="closeModal('sub-success-modal')">×</button>
+    <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
+    <h2>Paiement confirmé !</h2>
+    <p class="text-muted" style="margin:0.75rem 0 1rem;">Votre abonnement est actif. Voici votre code partenaire unique — partagez-le avec <strong style="color:var(--text)">UNE seule personne</strong>.</p>
+    <div style="background:var(--bg3);border:2px dashed var(--hot);border-radius:16px;padding:1.5rem;margin:1rem 0;">
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.5rem;letter-spacing:0.08em;">VOTRE CODE PARTENAIRE</div>
+      <div id="partner-code-display" style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--hot);letter-spacing:0.25em;"></div>
+      <button onclick="copyPartnerCode()" style="margin-top:0.75rem;background:none;border:1px solid var(--border);color:var(--muted);padding:0.4rem 1rem;border-radius:999px;cursor:pointer;font-size:0.8rem;">📋 Copier le code</button>
+    </div>
+    <div style="background:rgba(255,61,107,0.08);border:1px solid rgba(255,61,107,0.2);border-radius:12px;padding:0.75rem;font-size:0.82rem;color:var(--hot);margin-bottom:1.5rem;">
+      ⚠️ Ce code ne fonctionne qu'avec 1 seule personne. Ne le partagez qu'à votre partenaire de confiance.
+    </div>
+    <div id="sub-tx-info" style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;"></div>
+    <button class="btn btn-hot" style="width:100%;justify-content:center;" onclick="closeModal('sub-success-modal');startGame('hot')">Accéder à la Zone HOT 🔥</button>
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.sub-plan { transition: border-color 0.2s, transform 0.15s; }
+.sub-plan.selected-plan { border-color: var(--hot) !important; transform: scale(1.02); }
+</style>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
+<script>
+// ── STATE ──
+const state = {
+  currentPage: 'home',
+  hasHotSub: false,
+  hasPartnerCode: false,
+  roomCode: generateCode(),
+  players: ['Toi'],
+  currentGame: null,
+  questionIndex: 0,
+  timerInterval: null,
+  timerValue: 30,
+  rouletteAngle: 0,
+  quizAnswers: [],
+  voteResults: {},
+  soireePlayerIndex: 0,
+};
+
+function generateCode(len=4) {
+  return Math.random().toString(36).toUpperCase().slice(2,2+len);
+}
+
+// ── NAVIGATION ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  state.currentPage = id;
+  if (id === 'lobby') initLobby();
+}
+
+function startGame(gameId) {
+  state.currentGame = gameId;
+  showPage('game');
+  renderGame(gameId);
+}
+
+function launchFromLobby() {
+  const g = document.getElementById('lobby-game-select').value;
+  startGame(g);
+}
+
+// ── LOBBY ──
+function initLobby() {
+  document.getElementById('room-code-display').textContent = state.roomCode;
+  simulatePlayersJoining();
+}
+
+function simulatePlayersJoining() {
+  const names = ['Alex', 'Sam', 'Jordan'];
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i >= names.length) { clearInterval(iv); return; }
+    const slot = document.getElementById('slot' + (i + 2));
+    if (slot) {
+      const colors = ['rgba(138,112,255,0.2)', 'rgba(48,213,168,0.2)', 'rgba(255,107,202,0.2)'];
+      const txts = ['var(--purple)', 'var(--teal)', 'var(--pink)'];
+      slot.outerHTML = `<div class="player-avatar" style="background:${colors[i]};color:${txts[i]};">${names[i]}</div>`;
+      state.players.push(names[i]);
+      document.getElementById('player-count').textContent = state.players.length;
+    }
+    i++;
+  }, 1200);
+}
+
+function copyCode() {
+  navigator.clipboard?.writeText(state.roomCode).catch(() => {});
+  showNotif('Code copié : ' + state.roomCode + ' ✓');
+}
+
+function shareLink() {
+  const url = window.location.href + '?room=' + state.roomCode;
+  navigator.clipboard?.writeText(url).catch(() => {});
+  showNotif('Lien copié ! Partagez-le avec vos amis ✓');
+}
+
+function joinRoom() {
+  const code = document.getElementById('join-code-input').value.toUpperCase().trim();
+  if (code.length < 4) return showNotif('⚠️ Code invalide');
+  showNotif('Connexion à la salle ' + code + '...');
+  setTimeout(() => { state.roomCode = code; showNotif('✅ Connecté à la salle ' + code); }, 1000);
+}
+
+// ── MODALS ──
+function showJoinModal() {
+  document.getElementById('join-modal').classList.add('show');
+}
+function openHotModal() {
+  document.getElementById('hot-modal').classList.add('show');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+function joinFromModal() {
+  const code = document.getElementById('join-code-modal').value.toUpperCase().trim();
+  const name = document.getElementById('join-name').value.trim() || 'Joueur';
+  if (!code) return showNotif('⚠️ Entrez un code');
+  closeModal('join-modal');
+  state.roomCode = code;
+  showPage('lobby');
+  showNotif('✅ Connecté à ' + code + ' en tant que ' + name);
+}
+
+// ══════════════════════════════════════════════
+// ── FEDAPAY CONFIG — REMPLACEZ CES VALEURS ──
+// ══════════════════════════════════════════════
+const FEDAPAY_CONFIG = {
+  public_key: 'VOTRE_CLE_PUBLIQUE_FEDAPAY', // ← Remplacez par votre clé publique FedaPay
+  environment: 'sandbox',                    // ← 'sandbox' pour tests, 'live' pour production
+  locale: 'fr',
+  currency: { iso: 'XOF' },
+};
+
+// Plans disponibles
+const PLANS = {
+  month:   { label: 'Mensuel',  amount: 2500,  description: 'Abonnement HOT PlayZone — 1 mois' },
+  '3month':{ label: '3 Mois',   amount: 6000,  description: 'Abonnement HOT PlayZone — 3 mois' },
+};
+
+let selectedPlan = 'month';
+let fedaWidget = null;
+
+function selectPlan(planId, amount) {
+  selectedPlan = planId;
+  document.querySelectorAll('.sub-plan').forEach(el => el.classList.remove('selected-plan'));
+  document.getElementById('plan-' + planId).classList.add('selected-plan');
+  document.getElementById('pay-amount-label').textContent = amount.toLocaleString('fr-FR') + ' FCFA';
+}
+
+// ── HOT ACCESS ──
+function checkHotAccess(game) {
+  if (state.hasHotSub || state.hasPartnerCode) {
+    startGame(game);
+  } else {
+    state.pendingHotGame = game;
+    openHotModal();
+  }
+}
+
+// ── LANCER LE PAIEMENT FEDAPAY ──
+function initFedaPayPayment() {
+  const name = document.getElementById('pay-name').value.trim();
+  const phone = document.getElementById('pay-phone').value.trim().replace(/\s/g, '');
+
+  if (!name) return showNotif('⚠️ Entrez votre nom complet');
+  if (!phone || phone.length < 8) return showNotif('⚠️ Entrez un numéro Mobile Money valide');
+
+  const plan = PLANS[selectedPlan];
+  const nameParts = name.split(' ');
+  const firstname = nameParts[0] || name;
+  const lastname  = nameParts.slice(1).join(' ') || firstname;
+
+  // Afficher loading
+  document.getElementById('pay-btn').disabled = true;
+  document.getElementById('pay-btn').textContent = '⏳ Ouverture du paiement...';
+
+  // Créer le widget FedaPay
+  fedaWidget = FedaPay.init({
+    public_key:  FEDAPAY_CONFIG.public_key,
+    environment: FEDAPAY_CONFIG.environment,
+    locale:      FEDAPAY_CONFIG.locale,
+    transaction: {
+      amount:      plan.amount,
+      description: plan.description,
+      custom_metadata: JSON.stringify({ plan: selectedPlan }),
+    },
+    customer: {
+      firstname: firstname,
+      lastname:  lastname,
+      phone_number: {
+        number: phone,
+        country: 'BJ',
+      },
+    },
+    // ── CALLBACKS ──
+    onComplete: function(transaction) {
+      document.getElementById('pay-btn').disabled = false;
+      document.getElementById('pay-btn').innerHTML = '💳 Payer — <span id="pay-amount-label">' + plan.amount.toLocaleString('fr-FR') + ' FCFA</span>';
+
+      if (transaction.reason === FedaPay.TRANSACTION_APPROVED) {
+        // ✅ Paiement accepté
+        const partnerCode = 'HOT-' + generateCode(8);
+        const txId = transaction.transaction ? transaction.transaction.id : ('TX-' + Date.now());
+        // Enregistrer sur le backend
+        saveSubscriptionToBackend(txId, partnerCode, selectedPlan);
+        activateSubscription(txId, partnerCode);
+      } else if (transaction.reason === FedaPay.TRANSACTION_CANCELED) {
+        showNotif('❌ Paiement annulé.');
+      } else {
+        showNotif('❌ Paiement échoué. Réessayez ou contactez le support.');
+      }
+    },
+    onError: function(error) {
+      document.getElementById('pay-btn').disabled = false;
+      document.getElementById('pay-btn').innerHTML = '💳 Payer maintenant — <span id="pay-amount-label">' + plan.amount.toLocaleString('fr-FR') + ' FCFA</span>';
+      console.error('FedaPay error:', error);
+
+      // Mode démo si clé non configurée
+      if (FEDAPAY_CONFIG.public_key === 'VOTRE_CLE_PUBLIQUE_FEDAPAY') {
+        showDemoMode(name, phone, plan);
+      } else {
+        showNotif('❌ Erreur paiement. Vérifiez votre connexion.');
+      }
+    }
+  });
+
+  // Ouvrir le widget (popup intégré)
+  fedaWidget.open();
+}
+
+// ── MODE DÉMO (avant config des vraies clés) ──
+function showDemoMode(name, phone, plan) {
+  const demo = document.getElementById('pay-demo-block');
+  if (demo) { demo.style.display = 'block'; return; }
+  const block = document.createElement('div');
+  block.id = 'pay-demo-block';
+  block.style.cssText = 'margin-top:1rem;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);border-radius:12px;padding:1.25rem;text-align:center;';
+  block.innerHTML = `
+    <div style="font-size:0.75rem;color:var(--gold);font-weight:700;letter-spacing:0.05em;margin-bottom:0.5rem;">⚙️ MODE DÉMONSTRATION</div>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;">Ajoutez votre clé publique FedaPay dans <code style="color:var(--gold);background:var(--bg3);padding:2px 6px;border-radius:4px;">FEDAPAY_CONFIG.public_key</code> pour activer le vrai paiement.</p>
+    <p style="font-size:0.85rem;margin-bottom:1rem;">👤 <strong>${name}</strong> &nbsp;|&nbsp; 📱 ${phone} &nbsp;|&nbsp; 💰 <strong>${plan.amount.toLocaleString('fr-FR')} FCFA</strong></p>
+    <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="confirmDemo()">✅ Simuler paiement accepté</button>
+  `;
+  document.getElementById('pay-btn').parentNode.appendChild(block);
+}
+
+function confirmDemo() {
+  const partnerCode = 'HOT-' + generateCode(8);
+  activateSubscription('TX-DEMO-' + Date.now(), partnerCode);
+}
+
+// ── ENREGISTRER SUR LE BACKEND NODE.JS ──
+async function saveSubscriptionToBackend(txId, partnerCode, plan) {
+  try {
+    // ← Remplacez '/api/subscriptions' par votre vrai endpoint Node.js
+    await fetch('/api/subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transaction_id: txId,
+        partner_code: partnerCode,
+        plan: plan,
+        activated_at: new Date().toISOString(),
+      })
+    });
+  } catch(e) {
+    console.warn('Backend save non-bloquant:', e);
+  }
+}
+
+// ── ACTIVER L'ABONNEMENT ──
+function activateSubscription(txId, partnerCode) {
+  state.hasHotSub = true;
+  sessionStorage.setItem('pz_hot_sub', JSON.stringify({
+    active: true,
+    partner_code: partnerCode,
+    transaction_id: txId,
+    activated_at: new Date().toISOString(),
+  }));
+  closeModal('hot-modal');
+  // Réinitialiser le bouton payer
+  const btn = document.getElementById('pay-btn');
+  if(btn) { btn.disabled = false; btn.innerHTML = '💳 Payer maintenant — <span id="pay-amount-label">' + PLANS[selectedPlan].amount.toLocaleString('fr-FR') + ' FCFA</span>'; }
+  const demoBlock = document.getElementById('pay-demo-block');
+  if(demoBlock) demoBlock.remove();
+  document.getElementById('partner-code-display').textContent = partnerCode;
+  document.getElementById('sub-tx-info').textContent = 'ID Transaction FedaPay : ' + txId;
+  document.getElementById('sub-success-modal').classList.add('show');
+}
+
+function copyPartnerCode() {
+  const code = document.getElementById('partner-code-display').textContent;
+  navigator.clipboard?.writeText(code).catch(() => {});
+  showNotif('Code copié : ' + code + ' ✓');
+}
+
+// ── CODE PARTENAIRE ──
+function usePartnerCode() {
+  const code = document.getElementById('partner-code-input').value.trim().toUpperCase();
+  if (code.startsWith('HOT-') && code.length >= 8) {
+    // En production : vérifiez via votre backend → fetch('/api/verify-partner-code', ...)
+    state.hasPartnerCode = true;
+    closeModal('hot-modal');
+    showNotif('✅ Accès HOT débloqué avec le code partenaire 🔥');
+    setTimeout(() => startGame(state.pendingHotGame || 'hot'), 800);
+  } else {
+    showNotif('❌ Code invalide. Format attendu : HOT-XXXXXXXX');
+  }
+}
+
+// ── RESTAURER SESSION ──
+function checkPaymentReturn() {
+  const savedSub = sessionStorage.getItem('pz_hot_sub');
+  if (savedSub) {
+    try {
+      const sub = JSON.parse(savedSub);
+      if (sub.active) state.hasHotSub = true;
+    } catch(e) {}
+  }
+}
+
+// ── GAME RENDERER ──
+function renderGame(gameId) {
+  clearTimer();
+  const c = document.getElementById('game-content');
+  switch(gameId) {
+    case 'questions': c.innerHTML = buildQuestionsGame(); break;
+    case 'qui': c.innerHTML = buildQuiGame(); break;
+    case 'personnalite': c.innerHTML = buildPersonnaliteGame(); break;
+    case 'compat': c.innerHTML = buildCompatGame(); break;
+    case 'defis': c.innerHTML = buildDefisGame(); break;
+    case 'roulette': c.innerHTML = buildRouletteGame(); break;
+    case 'soiree': c.innerHTML = buildSoireeGame(); break;
+    case 'hot': c.innerHTML = buildHotGame(); break;
+  }
+  afterRender(gameId);
+}
+
+function afterRender(gameId) {
+  if (gameId === 'defis' || gameId === 'questions') startTimer(30);
+  if (gameId === 'roulette') drawRoulette();
+}
+
+// ══ QUESTIONS GÊNANTES ══
+const questionsData = [
+  { q: "Quel est ton plus gros mensonge à quelqu'un dans cette salle ?", level: 2 },
+  { q: "Ton pire message envoyé à quelqu'un que tu regrettes ?", level: 2 },
+  { q: "La chose la plus embarrassante qui te soit arrivée en public ?", level: 1 },
+  { q: "As-tu déjà parlé en mal d'une personne ici derrière son dos ?", level: 3 },
+  { q: "Quelle est ta peur secrète que peu de gens connaissent ?", level: 1 },
+  { q: "Le truc le plus fou que tu aies fait pour quelqu'un ?", level: 2 },
+  { q: "Ta pensée la plus étrange de ce mois-ci ?", level: 1 },
+  { q: "Quel serait ton dernier repas si c'était le dernier jour ?", level: 1 },
+  { q: "La chose que tu regretterais le plus de ne jamais avoir faite ?", level: 2 },
+  { q: "Quelle compétence cachée as-tu que personne ne soupçonne ?", level: 1 },
+];
+let qIdx = 0;
+
+function buildQuestionsGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h2 style="font-size:1.3rem;">😳 Questions Gênantes</h2>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <div class="dot-live"></div>
+        <span style="font-size:0.85rem;color:var(--muted);">${state.players.length} joueurs</span>
+      </div>
+    </div>
+    <div class="timer-ring" id="timer-ring">${timerSVG()}</div>
+    <div class="question-card" id="q-card">
+      <div id="q-level" style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;"></div>
+      <h2 id="q-text"></h2>
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;">
+      <button class="btn btn-outline" onclick="nextQuestion()">➡️ Suivant</button>
+      <button class="btn btn-gold" onclick="hotterQuestion()">🔥 Plus chaud</button>
+      <button class="btn btn-purple" onclick="funnyQuestion()">😂 Plus drôle</button>
+    </div>
+    <div style="margin-top:1.5rem;font-size:0.8rem;color:var(--muted);text-align:center;">Question <span id="q-num">1</span>/10 · Tous les joueurs voient la même question</div>
+  </div>`;
+}
+
+const hotterQs = [
+  "Nomme la personne ici à qui tu ferais le plus confiance avec un secret honteux.",
+  "Décris ta pire rupture en 1 phrase.",
+  "Quelle vérité évites-tu le plus de te dire à toi-même ?",
+  "Le truc le plus déplacé que tu aies fait en soirée ?",
+  "As-tu déjà menti sur quelque chose d'important à quelqu'un que tu aimais ?",
+];
+const funnyQs = [
+  "Imite le joueur à ta gauche en train de dormir. On vote pour le meilleur.",
+  "Quel animal serait le plus proche de ta personnalité et pourquoi ?",
+  "Ton alibi si tu ratais un examen (le plus créatif gagne) ?",
+  "Tu as 60 secondes : invente un proverbe africain complètement absurde.",
+  "Mime une dispute sans parler. Les autres devinent le sujet.",
+];
+
+function showQuestion(q, level) {
+  const stars = '🌶️'.repeat(level);
+  document.getElementById('q-level').textContent = stars + ' Niveau ' + level;
+  document.getElementById('q-text').textContent = q;
+  document.getElementById('q-num').textContent = (qIdx + 1);
+  resetTimer(30);
+}
+
+function nextQuestion() {
+  qIdx = (qIdx + 1) % questionsData.length;
+  const d = questionsData[qIdx];
+  showQuestion(d.q, d.level);
+}
+function hotterQuestion() {
+  const q = hotterQs[Math.floor(Math.random() * hotterQs.length)];
+  showQuestion(q, 3);
+}
+function funnyQuestion() {
+  const q = funnyQs[Math.floor(Math.random() * funnyQs.length)];
+  showQuestion(q, 1);
+}
+
+// ══ QUI EST LE PLUS ══
+const quiQuestions = [
+  "Qui est le plus jaloux ?", "Qui est le plus drôle ?", "Qui va se marier en premier ?",
+  "Qui est le plus courageux ?", "Qui est le plus aventurier ?", "Qui va être riche ?",
+  "Qui est le plus romantique ?", "Qui est le meilleur ami ?", "Qui est le plus têtu ?",
+];
+let quiQ = 0;
+let quiVotes = {};
+
+function buildQuiGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <h2 style="font-size:1.3rem;margin-bottom:1.5rem;">🏆 Qui est le plus…</h2>
+    <div class="vote-card" id="qui-card">
+      <h2 id="qui-q" style="font-size:1.4rem;margin-bottom:1.5rem;"></h2>
+      <div class="vote-options" id="qui-options"></div>
+      <div id="qui-results" style="margin-top:1.5rem;display:none;"></div>
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:center;margin-top:1.5rem;">
+      <button class="btn btn-outline" onclick="nextQuiQ()">⏭️ Prochaine question</button>
+      <button class="btn btn-gold" onclick="revealQuiResults()">📊 Voir résultats</button>
+    </div>
+  </div>`;
+}
+
+function renderQuiQ() {
+  quiVotes = {};
+  document.getElementById('qui-q').textContent = quiQuestions[quiQ];
+  const opts = document.getElementById('qui-options');
+  opts.innerHTML = '';
+  const cols = ['var(--purple)', 'var(--teal)', 'var(--pink)', 'var(--orange)'];
+  state.players.forEach((p, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'vote-player';
+    btn.innerHTML = `<div style="font-size:1.5rem;margin-bottom:0.25rem;">${['😄','😎','🤩','🔥'][i%4]}</div><div>${p}</div>`;
+    btn.onclick = () => voteFor(p, i, btn, cols[i % cols.length]);
+    opts.appendChild(btn);
+  });
+  document.getElementById('qui-results').style.display = 'none';
+}
+
+function voteFor(player, idx, btn, color) {
+  document.querySelectorAll('.vote-player').forEach(b => b.classList.remove('voted'));
+  btn.classList.add('voted');
+  btn.style.borderColor = color;
+  quiVotes[player] = (quiVotes[player] || 0) + 1;
+  showNotif('Vote enregistré pour ' + player + ' ✓');
+}
+
+function revealQuiResults() {
+  const res = document.getElementById('qui-results');
+  res.style.display = 'block';
+  const sorted = state.players.map(p => ({ name: p, votes: quiVotes[p] || 0 })).sort((a,b) => b.votes - a.votes);
+  const max = Math.max(...sorted.map(p => p.votes), 1);
+  const cols = ['var(--gold)', 'var(--purple)', 'var(--teal)', 'var(--pink)'];
+  res.innerHTML = '<div style="font-weight:600;margin-bottom:1rem;">Résultats :</div>' +
+    sorted.map((p, i) => `
+      <div style="margin-bottom:0.75rem;text-align:left;">
+        <div style="display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:4px;">
+          <span>${i===0?'🏆 ':''}<strong>${p.name}</strong></span>
+          <span style="color:var(--muted)">${p.votes} vote${p.votes>1?'s':''}</span>
+        </div>
+        <div class="vote-bar"><div class="vote-fill" style="width:${(p.votes/max*100)}%;background:${cols[i]};"></div></div>
+      </div>`).join('');
+}
+
+function nextQuiQ() {
+  quiQ = (quiQ + 1) % quiQuestions.length;
+  renderQuiQ();
+}
+
+// ══ QUIZ PERSONNALITÉ ══
+const personnaliteQuiz = {
+  title: "Quel type d'ami es-tu ?",
+  questions: [
+    { q: "Un ami t'appelle en pleine nuit avec un problème.", opts: ["Je décroche toujours","Je décroche si c'est urgent","Je rappelle demain","Je mets en silence 😅"] },
+    { q: "Il y a un conflit dans le groupe. Tu…", opts: ["Médie entre les deux","Prends position clairement","Observe de loin","Change de sujet"] },
+    { q: "C'est l'anniversaire d'un ami. Tu…", opts: ["Organises une surprise","Envoies un beau message","Appelles","Poste sur les réseaux"] },
+    { q: "Ton ami fait une erreur. Tu…", opts: ["Le dis franchement","Attends le bon moment","Attends qu'il s'en rende compte","Ne dis rien"] },
+  ],
+  results: [
+    { type: "Le Pilier 🏛️", desc: "Tu es l'ami sur qui tout le monde compte. Fiable, présent, inépuisable.", color: "var(--gold)" },
+    { type: "Le Franc-Tireur 🎯", desc: "Tu dis la vérité même quand elle fait mal. Tes amis savent qu'ils peuvent te faire confiance.", color: "var(--purple)" },
+    { type: "Le Sage 🧘", desc: "Calme et réfléchi, tu observes avant d'agir. Ton conseil vaut de l'or.", color: "var(--teal)" },
+    { type: "L'Animateur 🎉", desc: "Tu mets de l'ambiance partout où tu vas. Sans toi, le groupe s'ennuie.", color: "var(--pink)" },
+  ]
+};
+let pqIdx = 0, pqAnswers = [];
+
+function buildPersonnaliteGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <h2 style="font-size:1.3rem;margin-bottom:0.5rem;">🧠 Quiz de Personnalité</h2>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">${personnaliteQuiz.title}</p>
+    <div class="quiz-progress" id="pq-progress"></div>
+    <div class="question-card" id="pq-card">
+      <h2 id="pq-q" style="font-size:1.3rem;margin-bottom:1.5rem;"></h2>
+      <div class="answers-grid" id="pq-opts"></div>
+    </div>
+    <div id="pq-result" style="display:none;"></div>
+  </div>`;
+}
+
+function renderPQ() {
+  const qs = personnaliteQuiz.questions;
+  const prog = document.getElementById('pq-progress');
+  prog.innerHTML = qs.map((_, i) => `<div class="quiz-dot ${i < pqIdx ? 'done' : i === pqIdx ? 'current' : ''}"></div>`).join('');
+  const q = qs[pqIdx];
+  document.getElementById('pq-q').textContent = q.q;
+  document.getElementById('pq-opts').innerHTML = q.opts.map((o, i) =>
+    `<button class="answer-btn" onclick="answerPQ(${i})">${o}</button>`).join('');
+}
+
+function answerPQ(i) {
+  pqAnswers.push(i);
+  pqIdx++;
+  if (pqIdx >= personnaliteQuiz.questions.length) {
+    showPQResult();
+  } else {
+    renderPQ();
+  }
+}
+
+function showPQResult() {
+  document.getElementById('pq-card').style.display = 'none';
+  const res = personnaliteQuiz.results[Math.floor(Math.random() * personnaliteQuiz.results.length)];
+  document.getElementById('pq-result').style.display = 'block';
+  document.getElementById('pq-result').innerHTML = `
+    <div style="text-align:center;padding:2rem;background:var(--card);border-radius:20px;border:1px solid var(--border);">
+      <div style="font-size:3rem;margin-bottom:1rem;">🎊</div>
+      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem;">TU ES…</div>
+      <h2 style="font-size:1.8rem;color:${res.color};margin-bottom:1rem;">${res.type}</h2>
+      <p style="color:var(--muted);line-height:1.6;">${res.desc}</p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap;">
+        <button class="btn btn-gold" onclick="restartPQ()">🔄 Recommencer</button>
+        <button class="btn btn-outline" onclick="showNotif('Résultat partagé !')">📤 Partager</button>
+      </div>
+    </div>`;
+}
+
+function restartPQ() {
+  pqIdx = 0; pqAnswers = [];
+  document.getElementById('pq-card').style.display = '';
+  document.getElementById('pq-result').style.display = 'none';
+  renderPQ();
+}
+
+// ══ COMPATIBILITÉ ══
+const compatQs = [
+  { q: "En soirée, tu préfères :", opts: ["Rester dans un coin calme","Être au centre de la fête"] },
+  { q: "Pour toi, l'amour c'est :", opts: ["Se tout dire","Garder une part de mystère"] },
+  { q: "Le week-end idéal :", opts: ["Aventure et sorties","Cocooning à la maison"] },
+  { q: "Face à un conflit :", opts: ["En parler tout de suite","Attendre que ça se calme"] },
+];
+let cIdx = 0, cA1 = [], cA2 = [], cTurn = 1;
+
+function buildCompatGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <h2 style="font-size:1.3rem;margin-bottom:0.5rem;">❤️ Match & Compatibilité</h2>
+    <div id="compat-intro">
+      <p style="color:var(--muted);margin-bottom:1.5rem;">Deux personnes répondent chacune aux mêmes questions. Découvrez votre compatibilité !</p>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <input class="input-field" id="c-name1" placeholder="Prénom joueur 1" style="margin-bottom:0.75rem;">
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <input class="input-field" id="c-name2" placeholder="Prénom joueur 2">
+        </div>
+      </div>
+      <button class="btn btn-teal" style="margin-top:1rem;width:100%;justify-content:center;" onclick="startCompat()">💫 Commencer</button>
+    </div>
+    <div id="compat-quiz" style="display:none;">
+      <div id="compat-turn-badge" style="text-align:center;margin-bottom:1rem;"></div>
+      <div class="quiz-progress" id="c-progress"></div>
+      <div class="question-card">
+        <h2 id="c-q" style="font-size:1.3rem;margin-bottom:1.5rem;"></h2>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;" id="c-opts"></div>
+      </div>
+    </div>
+    <div id="compat-result" style="display:none;"></div>
+  </div>`;
+}
+
+function startCompat() {
+  const n1 = document.getElementById('c-name1').value || 'Joueur 1';
+  const n2 = document.getElementById('c-name2').value || 'Joueur 2';
+  window._cn1 = n1; window._cn2 = n2;
+  cIdx = 0; cA1 = []; cA2 = []; cTurn = 1;
+  document.getElementById('compat-intro').style.display = 'none';
+  document.getElementById('compat-quiz').style.display = 'block';
+  renderCompatQ();
+}
+
+function renderCompatQ() {
+  const name = cTurn === 1 ? window._cn1 : window._cn2;
+  document.getElementById('compat-turn-badge').innerHTML =
+    `<div class="turn-indicator"><div class="dot-live"></div> Tour de <strong>${name}</strong> · Question ${(cTurn===1?cIdx:cIdx)+1}/${compatQs.length}</div>`;
+  const prog = document.getElementById('c-progress');
+  prog.innerHTML = compatQs.map((_,i) => `<div class="quiz-dot ${i < cIdx ? 'done' : i === cIdx ? 'current' : ''}"></div>`).join('');
+  const q = compatQs[cIdx];
+  document.getElementById('c-q').textContent = q.q;
+  document.getElementById('c-opts').innerHTML = q.opts.map((o, i) =>
+    `<button class="answer-btn" onclick="answerCompat(${i})" style="text-align:left;padding:1rem 1.25rem;">${o}</button>`).join('');
+}
+
+function answerCompat(i) {
+  if (cTurn === 1) {
+    cA1.push(i);
+    if (cA1.length < compatQs.length) { renderCompatQ(); }
+    else {
+      cIdx = 0; cTurn = 2;
+      showNotif(`✅ ${window._cn1} a terminé ! Au tour de ${window._cn2}`);
+      renderCompatQ();
+    }
+  } else {
+    cA2.push(i);
+    cIdx++;
+    if (cA2.length < compatQs.length) { renderCompatQ(); }
+    else { showCompatResult(); }
+  }
+}
+
+function showCompatResult() {
+  document.getElementById('compat-quiz').style.display = 'none';
+  const matches = cA1.filter((v, i) => v === cA2[i]).length;
+  const pct = Math.round((matches / compatQs.length) * 100);
+  const level = pct >= 75 ? {t:'💑 Âmes sœurs', c:'var(--hot)'} : pct >= 50 ? {t:'💛 Belle complicité', c:'var(--gold)'} : pct >= 25 ? {t:'🤝 Bons amis', c:'var(--purple)'} : {t:'🌀 Opposés qui s\'attirent', c:'var(--teal)'};
+  const res = document.getElementById('compat-result');
+  res.style.display = 'block';
+  res.innerHTML = `
+    <div style="text-align:center;padding:2rem;background:var(--card);border-radius:20px;border:1px solid var(--border);">
+      <div style="font-size:0.9rem;color:var(--muted);margin-bottom:0.75rem;">${window._cn1} & ${window._cn2}</div>
+      <div class="compat-result" style="color:${level.c};">${pct}%</div>
+      <div style="font-size:1.2rem;margin:0.5rem 0 1rem;">${level.t}</div>
+      <div class="compat-meter"><div class="compat-fill" id="compat-fill-bar" style="width:0%;"></div></div>
+      <button class="btn btn-outline" style="margin-top:1.5rem;" onclick="showNotif('Résultat partagé !')">📤 Partager les résultats</button>
+    </div>`;
+  setTimeout(() => { const b = document.getElementById('compat-fill-bar'); if(b) b.style.width = pct + '%'; }, 100);
+}
+
+// ══ DÉFIS RAPIDES ══
+const defis = [
+  { e:'💃', t:'Danse 10 secondes', d:'Lance-toi ! Les autres jugent.', timer:10 },
+  { e:'📱', t:'Envoie un emoji à ton crush', d:'Fais-le maintenant devant tout le monde !', timer:15 },
+  { e:'🎭', t:'Fais une imitation', d:'Imite une célébrité ou quelqu\'un du groupe.', timer:20 },
+  { e:'🗣️', t:'Dis 3 qualités à la personne en face', d:'Sincèrement ! Pas de tricherie.', timer:15 },
+  { e:'📸', t:'Photo la plus ridicule', d:'Prenez tous une photo absurde. Le groupe vote.', timer:20 },
+  { e:'🎤', t:'Chante 10 secondes', d:'N\'importe quelle chanson, mais chante !', timer:10 },
+  { e:'🤸', t:'Fais 5 pompes', d:'Ou une variante si tu ne peux pas.', timer:30 },
+  { e:'😂', t:'Raconte ta pire blague', d:'Le groupe doit rire (ou semblant !)', timer:20 },
+];
+let defiIdx = 0;
+
+function buildDefisGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <h2 style="font-size:1.3rem;margin-bottom:1.5rem;">⚡ Défis Rapides</h2>
+    <div class="timer-ring" id="timer-ring">${timerSVG()}</div>
+    <div class="challenge-card" id="defi-card">
+      <span class="challenge-emoji" id="defi-e"></span>
+      <div class="challenge-text" id="defi-t"></div>
+      <p style="color:var(--muted);font-size:0.9rem;" id="defi-d"></p>
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;">
+      <button class="btn btn-gold" onclick="nextDefi()">⚡ Défi Suivant</button>
+      <button class="btn btn-outline" onclick="skipDefi()">⏭️ Passer</button>
+    </div>
+  </div>`;
+}
+
+function showDefi() {
+  const d = defis[defiIdx % defis.length];
+  document.getElementById('defi-e').textContent = d.e;
+  document.getElementById('defi-t').textContent = d.t;
+  document.getElementById('defi-d').textContent = d.d;
+  resetTimer(d.timer);
+}
+function nextDefi() { defiIdx++; showDefi(); }
+function skipDefi() { defiIdx++; showDefi(); showNotif('Lâche ! +1 pénalité 😄'); }
+
+// ══ ROULETTE ══
+const rouletteItems = ['Vérité 🎯', 'Défi ⚡', 'Double ou rien 🎰', 'Immunité 🛡️', 'Passe 🃏', 'Penalité 💀'];
+const rouletteColors = ['#8A70FF','#30D5A8','#F5C842','#FF6BCA','#FF8C42','#FF3D6B'];
+
+function buildRouletteGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <h2 style="font-size:1.3rem;margin-bottom:0.5rem;text-align:center;">🎰 Roulette des Vérités</h2>
+    <p style="color:var(--muted);font-size:0.85rem;text-align:center;margin-bottom:1rem;">La roulette désigne votre sort !</p>
+    <div class="roulette-container">
+      <div class="roulette-pointer"></div>
+      <canvas id="roulette-canvas" width="280" height="280" style="border-radius:50%;cursor:pointer;" onclick="spinRoulette()"></canvas>
+    </div>
+    <div class="roulette-result" id="roulette-result" style="margin-top:1rem;min-height:2rem;"></div>
+    <div style="text-align:center;margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="spinRoulette()">🌀 Tourner !</button>
+      <button class="btn btn-outline" onclick="nextRoulettePlayer()">👤 Joueur suivant</button>
+    </div>
+    <div style="text-align:center;margin-top:1rem;font-size:0.85rem;color:var(--muted);">Tour de : <strong id="roulette-player" style="color:var(--text);">${state.players[0]}</strong></div>
+  </div>`;
+}
+
+function drawRoulette() {
+  const canvas = document.getElementById('roulette-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 140, cy = 140, r = 136;
+  const n = rouletteItems.length;
+  const slice = (2 * Math.PI) / n;
+  rouletteItems.forEach((item, i) => {
+    const start = i * slice;
+    const end = start + slice;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.fillStyle = rouletteColors[i];
+    ctx.fill();
+    ctx.strokeStyle = '#0D0D14';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + slice / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px DM Sans';
+    ctx.fillText(item, r - 10, 5);
+    ctx.restore();
+  });
+  ctx.beginPath();
+  ctx.arc(cx, cy, 20, 0, 2*Math.PI);
+  ctx.fillStyle = '#0D0D14';
+  ctx.fill();
+  ctx.strokeStyle = '#F5C842';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+let isSpinning = false;
+function spinRoulette() {
+  if (isSpinning) return;
+  isSpinning = true;
+  document.getElementById('roulette-result').textContent = '🌀 En train de tourner...';
+  const canvas = document.getElementById('roulette-canvas');
+  const extra = Math.random() * 360;
+  const spins = 1440 + extra;
+  let start = null;
+  const duration = 3500;
+  let initial = state.rouletteAngle;
+  const target = initial + spins;
+  function animate(ts) {
+    if (!start) start = ts;
+    const progress = Math.min((ts - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const angle = initial + (target - initial) * eased;
+    state.rouletteAngle = angle;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,280,280);
+    ctx.save();
+    ctx.translate(140,140);
+    ctx.rotate(angle * Math.PI / 180);
+    ctx.translate(-140,-140);
+    drawRouletteTransformed(ctx);
+    ctx.restore();
+    drawCenter(ctx);
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      isSpinning = false;
+      const finalAngle = ((angle % 360) + 360) % 360;
+      const slice = 360 / rouletteItems.length;
+      const idx = Math.floor(((360 - finalAngle) % 360) / slice) % rouletteItems.length;
+      const result = rouletteItems[idx];
+      document.getElementById('roulette-result').innerHTML = `Résultat : <strong style="color:${rouletteColors[idx]}">${result}</strong>`;
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function drawRouletteTransformed(ctx) {
+  const cx=140,cy=140,r=136,n=rouletteItems.length;
+  const slice = (2*Math.PI)/n;
+  rouletteItems.forEach((item,i) => {
+    const start = i*slice, end = start+slice;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end);
+    ctx.fillStyle = rouletteColors[i]; ctx.fill();
+    ctx.strokeStyle='#0D0D14'; ctx.lineWidth=2; ctx.stroke();
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(start+slice/2);
+    ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='bold 11px DM Sans';
+    ctx.fillText(item, r-10, 5); ctx.restore();
+  });
+}
+function drawCenter(ctx) {
+  ctx.beginPath(); ctx.arc(140,140,20,0,2*Math.PI);
+  ctx.fillStyle='#0D0D14'; ctx.fill();
+  ctx.strokeStyle='#F5C842'; ctx.lineWidth=3; ctx.stroke();
+}
+
+let rpIdx = 0;
+function nextRoulettePlayer() {
+  rpIdx = (rpIdx+1) % state.players.length;
+  document.getElementById('roulette-player').textContent = state.players[rpIdx];
+}
+
+// ══ MODE SOIRÉE ══
+const soireeChallenges = [
+  { e:'🥂', t:'Toast collectif', d:'Chaque joueur dit quelque chose de positif sur le joueur suivant.' },
+  { e:'🎲', t:'Vérité ou Défi', d:'Le joueur actuel choisit : répond à une vérité gênante OU relève un défi.' },
+  { e:'🕵️', t:'Qui a le plus…', d:'Votez : qui a le plus voyagé ? Le plus de followers ? Le plus de secrets ?' },
+  { e:'🎤', t:'Rap Battle de 30 sec', d:'Improvise un rap sur le thème de la soirée. Le groupe note sur 10.' },
+  { e:'🃏', t:'Carte Pénalité', d:'Le joueur avec le moins de points prend une pénalité décidée par le groupe.' },
+  { e:'🤝', t:'Alliance secrète', d:'Chaque joueur choisit secrètement un allié. Révélation à la fin.' },
+  { e:'📸', t:'Story défi', d:'Fais une story ou une photo live du défi imposé par le groupe.' },
+  { e:'🎯', t:'Précision de groupe', d:'Chacun dit un nombre entre 1-10. Celui le plus proche de la moyenne gagne.' },
+];
+let soireeTurn = 0;
+
+function buildSoireeGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+      <h2 style="font-size:1.3rem;">🥂 Mode Soirée</h2>
+      <div style="display:flex;align-items:center;gap:0.5rem;background:var(--bg3);padding:0.4rem 0.75rem;border-radius:999px;">
+        <div class="dot-live"></div>
+        <span style="font-size:0.8rem;">${state.players.length} joueurs en ligne</span>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-bottom:1rem;">
+      <div class="turn-indicator">Tour de <strong id="soiree-player" style="color:var(--gold);margin-left:0.25rem;">${state.players[0]}</strong></div>
+    </div>
+    <div class="challenge-card" id="soiree-card">
+      <span class="challenge-emoji" id="soiree-e"></span>
+      <div class="challenge-text" id="soiree-t"></div>
+      <p style="color:var(--muted);font-size:0.9rem;line-height:1.6;" id="soiree-d"></p>
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;">
+      <button class="btn btn-gold" onclick="nextSoiree(true)">✅ Défi relevé !</button>
+      <button class="btn btn-outline" onclick="nextSoiree(false)">💀 Pénalité</button>
+    </div>
+    <hr class="divider">
+    <div id="soiree-scores">
+      <div style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem;">Scores :</div>
+    </div>
+  </div>`;
+}
+
+let soireeScores = {};
+function initSoireeScores() {
+  state.players.forEach(p => soireeScores[p] = 0);
+  renderSoireeScores();
+  showSoireeChallenge();
+}
+
+function showSoireeChallenge() {
+  const c = soireeChallenges[soireeTurn % soireeChallenges.length];
+  document.getElementById('soiree-e').textContent = c.e;
+  document.getElementById('soiree-t').textContent = c.t;
+  document.getElementById('soiree-d').textContent = c.d;
+  const player = state.players[soireeTurn % state.players.length];
+  document.getElementById('soiree-player').textContent = player;
+}
+
+function nextSoiree(success) {
+  const player = state.players[soireeTurn % state.players.length];
+  if (success) { soireeScores[player] = (soireeScores[player]||0) + 10; showNotif('+10 pts pour ' + player + ' 🎉'); }
+  else { soireeScores[player] = Math.max(0, (soireeScores[player]||0) - 5); showNotif(player + ' prend une pénalité 💀'); }
+  soireeTurn++;
+  showSoireeChallenge();
+  renderSoireeScores();
+}
+
+function renderSoireeScores() {
+  const sorted = [...state.players].sort((a,b) => (soireeScores[b]||0) - (soireeScores[a]||0));
+  const div = document.getElementById('soiree-scores');
+  if (!div) return;
+  div.innerHTML = '<div style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem;">Scores :</div>' +
+    sorted.map((p, i) => `
+      <div class="score-row">
+        <div class="score-rank ${i===0?'first':''}">${i===0?'🥇':i+1}</div>
+        <div class="score-name">${p}</div>
+        <div class="score-pts">${soireeScores[p]||0} pts</div>
+      </div>`).join('');
+}
+
+// ══ HOT GAME ══
+const hotQuestions = [
+  "Décris ta soirée idéale à deux en 3 mots...",
+  "Quel est le message le plus osé que tu aies envoyé ?",
+  "Nomme quelque chose que tu n'as jamais osé dire à ton partenaire.",
+  "À quelle heure es-tu le plus romantique ?",
+  "Ton endroit rêvé pour une escapade à deux ?",
+];
+let hotIdx = 0;
+
+function buildHotGame() {
+  return `
+  <div class="game-area">
+    <button class="back-btn" onclick="showPage('home')">← Quitter</button>
+    <div class="hot-section">
+      <h2 style="font-size:1.4rem;margin-bottom:0.5rem;">🔥 Zone HOT — Privée</h2>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;">Espace partagé avec votre partenaire uniquement.</p>
+      <div style="display:flex;align-items:center;gap:0.5rem;justify-content:center;margin-bottom:1.5rem;">
+        <div class="dot-live"></div>
+        <span style="font-size:0.85rem;color:var(--teal);">Votre partenaire est connecté</span>
+      </div>
+      <div class="timer-ring" id="timer-ring">${timerSVG()}</div>
+      <div style="background:var(--card);border:1px solid rgba(255,61,107,0.3);border-radius:16px;padding:2rem;margin:1rem 0;">
+        <div style="font-size:0.75rem;color:var(--hot);letter-spacing:0.1em;margin-bottom:1rem;">QUESTION HOT</div>
+        <h2 id="hot-q" style="font-size:1.2rem;line-height:1.5;"></h2>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-hot" onclick="nextHotQ()">🔥 Suivant</button>
+        <button class="btn btn-outline" onclick="resetTimer(20)">⏱️ Recharger</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function showHotQ() {
+  const el = document.getElementById('hot-q');
+  if(el) el.textContent = hotQuestions[hotIdx % hotQuestions.length];
+  resetTimer(20);
+}
+function nextHotQ() { hotIdx++; showHotQ(); }
+
+// ══ TIMER ══
+function timerSVG() {
+  return `<svg width="90" height="90" viewBox="0 0 90 90">
+    <circle class="timer-bg" cx="45" cy="45" r="40" stroke-width="6" fill="none" stroke="var(--bg3)"/>
+    <circle class="timer-fg" id="timer-circle" cx="45" cy="45" r="40" stroke-width="6" fill="none" stroke="var(--gold)" stroke-dasharray="251" stroke-dashoffset="0" stroke-linecap="round"/>
+  </svg>
+  <div class="timer-text" id="timer-text">30</div>`;
+}
+
+function startTimer(seconds) {
+  clearTimer();
+  state.timerValue = seconds;
+  updateTimerDisplay(seconds, seconds);
+  state.timerInterval = setInterval(() => {
+    state.timerValue--;
+    updateTimerDisplay(state.timerValue, seconds);
+    if (state.timerValue <= 0) {
+      clearTimer();
+      const tText = document.getElementById('timer-text');
+      if (tText) { tText.textContent = '⏰'; tText.style.fontSize = '1.1rem'; }
+      const tCircle = document.getElementById('timer-circle');
+      if (tCircle) tCircle.style.stroke = 'var(--hot)';
+      showNotif('⏰ Temps écoulé !');
+    }
+  }, 1000);
+}
+
+function resetTimer(s) {
+  clearTimer();
+  startTimer(s);
+}
+
+function clearTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+function updateTimerDisplay(val, max) {
+  const tText = document.getElementById('timer-text');
+  const tCircle = document.getElementById('timer-circle');
+  if (tText) {
+    tText.textContent = val;
+    tText.style.fontSize = '1.3rem';
+    tText.style.color = val <= 5 ? 'var(--hot)' : 'var(--gold)';
+  }
+  if (tCircle) {
+    const pct = val / max;
+    const dash = 251 * (1 - pct);
+    tCircle.style.strokeDashoffset = dash;
+    tCircle.style.stroke = val <= 5 ? 'var(--hot)' : val <= 10 ? 'var(--orange)' : 'var(--gold)';
+  }
+}
+
+// ══ NOTIFICATION ──
+function showNotif(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2800);
+}
+
+// ── POST-RENDER INITS ──
+const _origRenderGame = renderGame;
+function renderGame(gameId) {
+  clearTimer();
+  const c = document.getElementById('game-content');
+  switch(gameId) {
+    case 'questions': c.innerHTML = buildQuestionsGame(); break;
+    case 'qui': c.innerHTML = buildQuiGame(); break;
+    case 'personnalite': c.innerHTML = buildPersonnaliteGame(); break;
+    case 'compat': c.innerHTML = buildCompatGame(); break;
+    case 'defis': c.innerHTML = buildDefisGame(); break;
+    case 'roulette': c.innerHTML = buildRouletteGame(); break;
+    case 'soiree': c.innerHTML = buildSoireeGame(); break;
+    case 'hot': c.innerHTML = buildHotGame(); break;
+  }
+  // Post-init
+  setTimeout(() => {
+    if (gameId === 'questions') { showQuestion(questionsData[0].q, questionsData[0].level); startTimer(30); }
+    if (gameId === 'qui') renderQuiQ();
+    if (gameId === 'personnalite') renderPQ();
+    if (gameId === 'compat') {}
+    if (gameId === 'defis') { showDefi(); }
+    if (gameId === 'roulette') drawRoulette();
+    if (gameId === 'soiree') initSoireeScores();
+    if (gameId === 'hot') { showHotQ(); startTimer(20); }
+  }, 50);
+}
+
+// ── INIT AU CHARGEMENT ──
+checkPaymentReturn();
+
+// Handle URL params for room joining
+const urlParams = new URLSearchParams(window.location.search);
+const roomParam = urlParams.get('room');
+if (roomParam && !urlParams.get('payment')) {
+  state.roomCode = roomParam;
+  showJoinModal();
+}
+</script>
+</body>
+</html>
